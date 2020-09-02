@@ -11,6 +11,11 @@ from pandas.plotting import scatter_matrix
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LinearRegression
 
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml2/master/"
 HOUSING_PATH = os.path.join("datasets", "housing")
@@ -41,7 +46,7 @@ def split_train_test(data, test_ratio):
 
 
 def test_set_check(identifier, test_ratio):
-    return crc32(np.int64(identifier)) & 0xffffffff < test_ratio * 2**32
+    return crc32(np.int64(identifier)) & 0xffffffff < test_ratio * 2 ** 32
 
 
 def split_train_test_by_id(data, test_ratio, id_column):
@@ -111,13 +116,13 @@ housing_labels = strat_train_set["median_house_value"].copy()
 # # Set the values to some value (zero, the mean, the median, etc.).
 # median = housing_copy["total_bedrooms"].median()
 # option3 = housing_copy["total_bedrooms"].fillna(median, inplace=True)
-imputer = SimpleImputer(strategy="median")
+# imputer = SimpleImputer(strategy="median")
 housing_num = housing_copy.drop("ocean_proximity", axis=1)
-imputer.fit(housing_num)
+# imputer.fit(housing_num)
 # print(imputer.statistics_)
 # print(housing_num.median().values)
-X = imputer.transform(housing_num)
-housing_tr = pd.DataFrame(X, columns=housing_num.columns)
+# X = imputer.transform(housing_num)
+# housing_tr = pd.DataFrame(X, columns=housing_num.columns)
 # option1 = housing_tr.dropna(subset=["total_bedrooms"])
 # print(len(housing_tr))
 # print(len(option1))
@@ -127,7 +132,59 @@ housing_cat = housing_copy[["ocean_proximity"]]
 # housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat)
 # print(housing_cat_encoded[:10])
 # print(ordinal_encoder.categories_)
-cat_encoder = OneHotEncoder()
-housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+# cat_encoder = OneHotEncoder()
+# housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
 # print(housing_cat_1hot)
-print(housing_cat_1hot.toarray())
+# print(housing_cat_1hot.toarray())
+# print(cat_encoder.categories_)
+# print(housing_copy)
+
+rooms_ix, bedrooms_ix, population_ix, households_ix = 3, 4, 5, 6
+
+
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, add_bedrooms_per_room=True):
+        self.add_bedrooms_per_room = add_bedrooms_per_room
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        rooms_per_household = X[:, rooms_ix] / X[:, households_ix]
+        population_per_household = X[:, population_ix] / X[:, households_ix]
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
+            return np.c_[X, rooms_per_household, population_per_household, bedrooms_per_room]
+        else:
+            return np.c_[X, rooms_per_household, population_per_household]
+
+
+# attr_adder = CombinedAttributesAdder(add_bedrooms_per_room=False)
+# housing_extra_attribs = attr_adder.transform(housing_copy.values)
+# print(housing_extra_attribs)
+num_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy="median")),
+    ('attribs_adder', CombinedAttributesAdder()),
+    ('std_scaler', StandardScaler()),
+])
+
+# housing_num_tr = num_pipeline.fit_transform(housing_num)
+# print(housing_num_tr)
+num_attribs = list(housing_num)
+cat_attribs = ["ocean_proximity"]
+
+full_pipeline = ColumnTransformer([
+    ("num", num_pipeline, num_attribs),
+    ("cat", OneHotEncoder(), cat_attribs),
+])
+
+housing_prepared = full_pipeline.fit_transform(housing_copy)
+# print(housing_prepared)
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+some_data = housing_copy.iloc[:5]
+some_labels = housing_labels.iloc[:5]
+some_data_prepared = full_pipeline.transform(some_data)
+print("Predictions:", lin_reg.predict(some_data_prepared))
+print("Labels:", list(some_labels))
