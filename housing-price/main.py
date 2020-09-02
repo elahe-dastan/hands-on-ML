@@ -8,6 +8,9 @@ from zlib import crc32
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedShuffleSplit
 from pandas.plotting import scatter_matrix
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml2/master/"
 HOUSING_PATH = os.path.join("datasets", "housing")
@@ -76,7 +79,7 @@ for train_index, test_index in split.split(housing, housing["income_cat"]):
 for set_ in (strat_train_set, strat_test_set):
     set_.drop("income_cat", axis=1, inplace=True)
 
-housing_copy = strat_train_set.copy()
+# housing_copy = strat_train_set.copy()
 # housing_copy.plot(kind="scatter", x="longitude", y="latitude", alpha=0.1)
 # housing_copy.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4, s=housing_copy["population"]/100,
 #                   label="population", figsize=(10, 7), c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True)
@@ -89,3 +92,42 @@ housing_copy = strat_train_set.copy()
 # plt.show()
 # housing_copy.plot(kind="scatter", x="median_income", y="median_house_value", alpha=0.1)
 # plt.show()
+# housing_copy["rooms_per_household"] = housing_copy["total_rooms"]/housing_copy["households"]
+# housing_copy["bedrooms_per_room"] = housing_copy["total_bedrooms"]/housing_copy["total_rooms"]
+# housing_copy["population_per_household"] = housing_copy["population"]/housing_copy["households"]
+# corr_matrix = housing_copy.corr()
+# print(corr_matrix["median_house_value"].sort_values(ascending=False))
+housing_copy = strat_train_set.drop("median_house_value", axis=1)
+housing_labels = strat_train_set["median_house_value"].copy()
+
+# # Get rid of the corresponding districts.
+# option1 = housing_copy.dropna(subset=["total_bedrooms"])
+# print(len(housing_copy))
+# print(len(option1))
+# # Get rid of the whole attribute.
+# option2 = housing_copy.drop("total_bedrooms", axis=1)
+# print(housing_copy)
+# print(option2)
+# # Set the values to some value (zero, the mean, the median, etc.).
+# median = housing_copy["total_bedrooms"].median()
+# option3 = housing_copy["total_bedrooms"].fillna(median, inplace=True)
+imputer = SimpleImputer(strategy="median")
+housing_num = housing_copy.drop("ocean_proximity", axis=1)
+imputer.fit(housing_num)
+# print(imputer.statistics_)
+# print(housing_num.median().values)
+X = imputer.transform(housing_num)
+housing_tr = pd.DataFrame(X, columns=housing_num.columns)
+# option1 = housing_tr.dropna(subset=["total_bedrooms"])
+# print(len(housing_tr))
+# print(len(option1))
+housing_cat = housing_copy[["ocean_proximity"]]
+# print(housing_cat.head(10))
+# ordinal_encoder = OrdinalEncoder()
+# housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat)
+# print(housing_cat_encoded[:10])
+# print(ordinal_encoder.categories_)
+cat_encoder = OneHotEncoder()
+housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+# print(housing_cat_1hot)
+print(housing_cat_1hot.toarray())
