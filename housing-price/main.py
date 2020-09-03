@@ -16,6 +16,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestRegressor
+import joblib
+from sklearn.model_selection import GridSearchCV
 
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml2/master/"
 HOUSING_PATH = os.path.join("datasets", "housing")
@@ -54,6 +60,11 @@ def split_train_test_by_id(data, test_ratio, id_column):
     in_test_set = ids.apply(lambda id_: test_set_check(id_, test_ratio))
     return data.loc[~in_test_set], data.loc[in_test_set]
 
+
+def display_scores(scores):
+    print("Scores:", scores)
+    print("Mean:", scores.mean())
+    print("Standard deviation:", scores.std())
 
 # fetch_housing_data()
 housing = load_housing_data()
@@ -181,10 +192,60 @@ full_pipeline = ColumnTransformer([
 housing_prepared = full_pipeline.fit_transform(housing_copy)
 # print(housing_prepared)
 lin_reg = LinearRegression()
-lin_reg.fit(housing_prepared, housing_labels)
+# lin_reg.fit(housing_prepared, housing_labels)
 
-some_data = housing_copy.iloc[:5]
-some_labels = housing_labels.iloc[:5]
-some_data_prepared = full_pipeline.transform(some_data)
-print("Predictions:", lin_reg.predict(some_data_prepared))
-print("Labels:", list(some_labels))
+# some_data = housing_copy.iloc[:5]
+# some_labels = housing_labels.iloc[:5]
+# some_data_prepared = full_pipeline.transform(some_data)
+# print("Predictions:", lin_reg.predict(some_data_prepared))
+# print("Labels:", list(some_labels))
+
+# housing_predictions = lin_reg.predict(housing_prepared)
+# lin_mse = mean_squared_error(housing_labels, housing_predictions)
+# lin_rmse = np.sqrt(lin_mse)
+# print(lin_rmse)
+
+# tree_reg = DecisionTreeRegressor()
+# tree_reg.fit(housing_prepared, housing_labels)
+#
+# housing_predictions = tree_reg.predict(housing_prepared)
+# tree_mse = mean_squared_error(housing_labels, housing_predictions)
+# tree_rmse = np.sqrt(tree_mse)
+# print(tree_rmse)
+
+tree_reg = DecisionTreeRegressor()
+
+# scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+# tree_rmse_scores = np.sqrt(-scores)
+# display_scores(tree_rmse_scores)
+#
+# lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+# lin_rmse_scores = np.sqrt(-lin_scores)
+# display_scores(lin_rmse_scores)
+
+forest_reg = RandomForestRegressor()
+# forest_reg.fit(housing_prepared, housing_labels)
+# housing_predictions = forest_reg.predict(housing_prepared)
+# forest_mse = mean_squared_error(housing_labels, housing_predictions)
+# forest_rmse = np.sqrt(forest_mse)
+# print(forest_rmse)
+
+# forest_scores = cross_val_score(forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+# forest_rmse_scores = np.sqrt(-forest_scores)
+# display_scores(forest_rmse_scores)
+#
+# joblib.dump(forest_reg, "forest_model")
+# my_model = joblib.load("forest_model")
+
+param_grid = [
+    {'n_estimators': [3, 10, 30], 'max_features':[2, 4, 6, 8]},
+    {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]},
+]
+
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True)
+grid_search.fit(housing_prepared, housing_labels)
+print(grid_search.best_params_)
+print(grid_search.best_estimator_)
+cvres = grid_search.cv_results_
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+    print(np.sqrt(-mean_score), params)
