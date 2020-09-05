@@ -15,7 +15,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import cross_val_score
@@ -27,8 +27,13 @@ from scipy import stats
 TITANIC_PATH = os.path.join("/home/raha/py/src/hands-on-ML/titanic/datasets/")
 
 
-def load_titanic_data(titanic_path=TITANIC_PATH):
+def load_titanic_train_data(titanic_path=TITANIC_PATH):
     csv_path = os.path.join(titanic_path, "train.csv")
+    return pd.read_csv(csv_path)
+
+
+def load_titanic_test_data(titanic_path=TITANIC_PATH):
+    csv_path = os.path.join(titanic_path, "test.csv")
     return pd.read_csv(csv_path)
 
 
@@ -38,13 +43,16 @@ def display_scores(scores):
     print("Standard deviation:", scores.std())
 
 
-data = load_titanic_data()
+data = load_titanic_train_data()
 print(data.info())
+
+test_data = load_titanic_test_data()
 
 data_labels = data["Survived"].copy()
 
-data = data.drop("Survived", axis=1).drop("Name", axis=1).drop("Cabin", axis=1)
-data_num = data.drop("Sex", axis=1).drop("Ticket", axis=1).drop("Embarked", axis=1)
+data = data.drop("Survived", axis=1).drop("Name", axis=1).drop("Cabin", axis=1).drop("Embarked", axis=1)
+test_data = test_data.drop("Name", axis=1).drop("Cabin", axis=1).drop("Embarked", axis=1)
+data_num = data.drop("Sex", axis=1).drop("Ticket", axis=1)
 
 
 # a = data["Cabin"][1]
@@ -60,37 +68,28 @@ full_pipeline = ColumnTransformer([
     ("num", num_pipeline, list(data_num)),
     ("cat_sex", OrdinalEncoder(), ["Sex"]),
     ("cat_ticket", OneHotEncoder(), ["Ticket"]),
-    ("cat_embarked", OneHotEncoder(), ["Embarked"]),
 ])
 
 data_prepared = full_pipeline.fit_transform(data)
 print(data_prepared)
 
-# housing_prepared = full_pipeline.fit_transform(housing_copy)
-# print(housing_prepared)
-lin_reg = LinearRegression()
-# lin_reg.fit(housing_prepared, housing_labels)
+full_pipeline = ColumnTransformer([
+    ("num", num_pipeline, list(data_num)),
+    ("cat_sex", OrdinalEncoder(), ["Sex"]),
+    ("cat_ticket", OneHotEncoder(), ["Ticket"]),
+])
 
-# some_data = housing_copy.iloc[:5]
-# some_labels = housing_labels.iloc[:5]
-# some_data_prepared = full_pipeline.transform(some_data)
-# print("Predictions:", lin_reg.predict(some_data_prepared))
-# print("Labels:", list(some_labels))
+test_data_prepared = full_pipeline.fit_transform(test_data)
 
-# housing_predictions = lin_reg.predict(housing_prepared)
-# lin_mse = mean_squared_error(housing_labels, housing_predictions)
-# lin_rmse = np.sqrt(lin_mse)
-# print(lin_rmse)
+log_reg = LogisticRegression()
+log_reg.fit(data_prepared, data_labels)
 
-# tree_reg = DecisionTreeRegressor()
-# tree_reg.fit(housing_prepared, housing_labels)
+# data_predictions = log_reg.predict(test_data_prepared)
+# print(data_predictions)
 #
-# housing_predictions = tree_reg.predict(housing_prepared)
-# tree_mse = mean_squared_error(housing_labels, housing_predictions)
-# tree_rmse = np.sqrt(tree_mse)
-# print(tree_rmse)
-
-tree_reg = DecisionTreeRegressor()
+# log_mse = mean_squared_error(data_labels, data_predictions)
+# log_rmse = np.sqrt(log_mse)
+# print(log_rmse)
 
 # scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
 # tree_rmse_scores = np.sqrt(-scores)
@@ -100,17 +99,7 @@ tree_reg = DecisionTreeRegressor()
 # lin_rmse_scores = np.sqrt(-lin_scores)
 # display_scores(lin_rmse_scores)
 
-forest_reg = RandomForestRegressor()
-# forest_reg.fit(housing_prepared, housing_labels)
-# housing_predictions = forest_reg.predict(housing_prepared)
-# forest_mse = mean_squared_error(housing_labels, housing_predictions)
-# forest_rmse = np.sqrt(forest_mse)
-# print(forest_rmse)
 
-# forest_scores = cross_val_score(forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
-# forest_rmse_scores = np.sqrt(-forest_scores)
-# display_scores(forest_rmse_scores)
-#
 # joblib.dump(forest_reg, "forest_model")
 # my_model = joblib.load("forest_model")
 
@@ -118,11 +107,9 @@ forest_reg = RandomForestRegressor()
 #     {'n_estimators': [3, 10, 30], 'max_features':[2, 4, 6, 8]},
 # {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]},
 # ]
-param_grid = [
-    {'n_estimators': [30], 'max_features': [8]},
-]
 
-grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True)
+
+# grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', return_train_score=True)
 # grid_search.fit(housing_prepared, housing_labels)
 # print(grid_search.best_params_)
 # print(grid_search.best_estimator_)
