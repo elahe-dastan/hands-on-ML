@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 import csv
+from sklearn.ensemble import RandomForestClassifier
 
 TITANIC_PATH = os.path.join("/home/raha/py/src/hands-on-ML/titanic/datasets/")
 
@@ -58,10 +59,16 @@ print(data_prepared)
 
 test_data_prepared = full_pipeline.transform(test_data)
 
-log_reg = LogisticRegression()
-log_reg.fit(data_prepared, data_labels)
+# log_reg = LogisticRegression()
+# log_reg.fit(data_prepared, data_labels)
 
-data_predictions = log_reg.predict(test_data_prepared)
+forest_clf = RandomForestClassifier()
+forest_clf.fit(data_prepared, data_labels)
+
+# data_predictions = log_reg.predict(test_data_prepared)
+# print(data_predictions)
+
+data_predictions = forest_clf.predict(test_data_prepared)
 print(data_predictions)
 
 with open('/home/raha/py/src/hands-on-ML/titanic/datasets/result.csv', 'w', newline='') as file:
