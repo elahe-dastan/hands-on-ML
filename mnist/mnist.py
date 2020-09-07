@@ -9,7 +9,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_predict
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score, recall_score, f1_score, precision_recall_curve
+from sklearn.metrics import precision_score, recall_score, f1_score, precision_recall_curve, roc_curve
 
 
 class Never5Classifier(BaseEstimator):
@@ -25,6 +25,11 @@ class Never5Classifier(BaseEstimator):
 def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
     plt.plot(thresholds, precisions[:-1], "b--", label="Precision")
     plt.plot(thresholds, recalls[:-1], "g-", label="Recall")
+
+
+def plot_roc_curve(fpr, tpr, label=None):
+    plt.plot(fpr, tpr, linewidth=2, label=label)
+    plt.plot([0, 1], [0, 1], 'k--')
 
 
 mnist = fetch_openml('mnist_784', version=1)
@@ -86,5 +91,16 @@ precisions, recalls, thresholds = precision_recall_curve(y_train_5, y_scores)
 # print(recalls)
 # print(thresholds)
 
-plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
+# plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
+# plt.show()
+
+# threshold_90_precision = thresholds[np.argmax(precisions >= 0.90)]
+#
+# y_train_pred_90 = (y_scores >= threshold_90_precision)
+# print(precision_score(y_train_5, y_train_pred_90))
+# print(recall_score(y_train_5, y_train_pred_90))
+
+fpr, tpr, thresholds = roc_curve(y_train_5, y_scores)
+
+plot_roc_curve(fpr, tpr)
 plt.show()
