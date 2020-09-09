@@ -13,6 +13,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score, precision_r
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
 
 
 class Never5Classifier(BaseEstimator):
@@ -144,13 +145,61 @@ forest_clf = RandomForestClassifier(random_state=42)
 
 # print(cross_val_score(sgd_clf, X_train, y_train, cv=3, scoring="accuracy"))
 
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-print("scaled")
-print(cross_val_score(sgd_clf, X_train_scaled, y_train, cv=3, scoring="accuracy"))
+# scaler = StandardScaler()
+# X_train_scaled = scaler.fit_transform(X_train)
+# print("scaled")
+# print(cross_val_score(sgd_clf, X_train_scaled, y_train, cv=3, scoring="accuracy"))
 
-y_train_pred = cross_val_predict(sgd_clf, X_train_scaled, y_train, cv=3)
-conf_mx = confusion_matrix(y_train, y_train_pred)
-print(conf_mx)
-plt.matshow(conf_mx, cmap=plt.cm.gray)
+# y_train_pred = cross_val_predict(sgd_clf, X_train_scaled, y_train, cv=3)
+# conf_mx = confusion_matrix(y_train, y_train_pred)
+# print(conf_mx)
+# plt.matshow(conf_mx, cmap=plt.cm.gray)
+# plt.show()
+
+# row_sums = conf_mx.sum(axis=1, keepdims=True)
+# norm_conf_mx = conf_mx / row_sums
+# np.fill_diagonal(norm_conf_mx, 0)
+# plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
+# plt.show()
+
+# cl_a, cl_b = 3, 5
+# X_aa = X_train[(y_train == cl_a) & (y_train_pred == cl_a)]
+# X_ab = X_train[(y_train == cl_a) & (y_train_pred == cl_b)]
+# X_ba = X_train[(y_train == cl_b) & (y_train_pred == cl_a)]
+# X_bb = X_train[(y_train == cl_b) & (y_train_pred == cl_b)]
+#
+# plt.figure(figsize=(8, 8))
+# plt.subplot(221)
+# plt.imshow(X_aa[:25])
+# plt.subplot(222)
+# plt.imshow(X_ab[:25])
+# plt.subplot(223)
+# plt.imshow(X_ba[:25])
+# plt.subplot(224)
+# plt.imshow(X_bb[:25])
+# plt.show()
+
+# y_train_large = (y_train >= 7)
+# y_train_odd = (y_train % 2 == 1)
+# y_multilabel = np.c_[y_train_large, y_train_odd]
+
+knn_clf = KNeighborsClassifier()
+# knn_clf.fit(X_train, y_multilabel)
+# print(knn_clf.predict([some_digit]))
+# y_train_knn_pred = cross_val_predict(knn_clf, X_train, y_multilabel, cv=3)
+# f1_score(y_multilabel, y_train_knn_pred, average="macro")
+# f1_score(y_multilabel, y_train_knn_pred, average="weighted")
+
+noise = np.random.randint(0, 100, (len(X_train), 784))
+X_train_mod = X_train + noise
+noise = np.random.randint(0, 100, (len(X_test), 784))
+X_test_mod = X_test + noise
+y_train_mod = X_train
+y_test_mod = X_test
+
+knn_clf.fit(X_train_mod, y_train_mod)
+plt.matshow(X_test_mod[20].reshape(28, 28), cmap=plt.cm.gray)
+clean_digit = knn_clf.predict([X_test_mod[20]])
+plt.matshow(clean_digit.reshape(28, 28), cmap=plt.cm.gray)
 plt.show()
+
