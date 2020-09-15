@@ -169,20 +169,28 @@ print(list(iris.keys()))
 # print(iris["DESCR"])
 # print(iris["feature_names"])
 # print(iris["filename"])
-X = iris["data"][:, 3:]
-y = (iris["target"] == 2).astype(np.int)
-
-log_reg = LogisticRegression()
-log_reg.fit(X, y)
-
-X_new = np.linspace(0, 3, 1000).reshape(-1, 1)
-y_proba = log_reg.predict_proba(X_new)
+# X = iris["data"][:, 3:]
+# y = (iris["target"] == 2).astype(np.int)
+#
+# log_reg = LogisticRegression()
+# log_reg.fit(X, y)
+#
+# X_new = np.linspace(0, 3, 1000).reshape(-1, 1)
+# y_proba = log_reg.predict_proba(X_new)
 # print(log_reg.classes_)
 # plt.plot(X_new, y_proba[:, 1], "g-", label="Iris-Virginica")
 # plt.plot(X_new, y_proba[:, 0], "b--", label="Not Iris-Virginica")
 # plt.show()
-print(log_reg.predict([[1.7], [1.5]]))
+# print(log_reg.predict([[1.7], [1.5]]))
 
+X = iris["data"][:, (2, 3)]
+y = iris["target"]
+
+softmax_reg = LogisticRegression(multi_class="multinomial", solver="lbfgs", C=10)
+softmax_reg.fit(X, y)
+
+print(softmax_reg.predict([[5, 2]]))
+print(softmax_reg.predict_proba([[5, 2]]))
 
 
 
