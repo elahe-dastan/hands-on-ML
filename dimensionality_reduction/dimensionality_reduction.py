@@ -12,6 +12,15 @@ X = np.array([[3, 2, 2],
 # W2 = Vt.T[:, :2]
 # X2D = X_centered.dot(W2)
 
-pca = PCA(n_components=2)
-X2D = pca.fit_transform(X)
-print(pca.components_)
+# pca = PCA(n_components=2)
+# X2D = pca.fit_transform(X)
+# print(pca.components_)
+# print(pca.explained_variance_ratio_)
+
+# pca = PCA()
+# pca.fit(X)
+# cumsum = np.cumsum(pca.explained_variance_ratio_)
+# d = np.argmax(cumsum >= 0.95) + 1
+
+pca = PCA(n_components=0.95)
+X_reduced = pca.fit_transform(X)
