@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
-X = np.array([[3, 2, 2],
-              [2, 3, -2]])
+X = np.array([[3, 23, 2],
+              [2, 3, -2],
+              [4, 7, 1]])
 
 # X_centered = X - X.mean(axis=0)
 # U, s, Vt = np.linalg.svd(X_centered)
@@ -17,10 +19,14 @@ X = np.array([[3, 2, 2],
 # print(pca.components_)
 # print(pca.explained_variance_ratio_)
 
-# pca = PCA()
-# pca.fit(X)
-# cumsum = np.cumsum(pca.explained_variance_ratio_)
-# d = np.argmax(cumsum >= 0.95) + 1
+pca = PCA()
+pca.fit(X)
+cumsum = np.cumsum(pca.explained_variance_ratio_)
+d = np.argmax(cumsum >= 0.95) + 1
+plt.plot(cumsum)
+plt.show()
+print(d)
 
-pca = PCA(n_components=0.95)
-X_reduced = pca.fit_transform(X)
+
+# pca = PCA(n_components=0.95)
+# X_reduced = pca.fit_transform(X)
