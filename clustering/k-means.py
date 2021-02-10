@@ -2,6 +2,8 @@ from sklearn.cluster import KMeans
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_score
+from matplotlib.image import imread
+import os
 
 k = 5
 kmeans = KMeans(n_clusters=k)
@@ -19,3 +21,8 @@ minibatch_kmeans.fit(X)
 
 print(silhouette_score(X, kmeans.labels_))  # varies from -1 to 1
 
+image = imread(os.path.join("", ""))
+X = image.reshape(-1, 3)
+kmeans = KMeans(n_clusters=8).fit(X)
+segmented_img = kmeans.cluster_centers_[kmeans.labels_]
+segmented_img = segmented_img.reshape(image.shape)
