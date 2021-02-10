@@ -22,3 +22,5 @@ for X_batch in np.array_split(X, n_batches):
     inc_pca.partial_fit(X_batch)
 
 X_reduced = inc_pca.transform(X)
+
+# I can use memmap alternatively
