@@ -21,3 +21,6 @@ print(y_new)
 densities = gm.score_samples(X)
 density_threshold = np.percentile(densities, 4)
 anomalies = X[densities < density_threshold]
+
+print(gm.aic(X))
+print(gm.bic(X))
