@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 # print(tf.__version__)
 # print(keras.__version__)
@@ -42,3 +44,27 @@ print(weights)
 print(weights.shape)
 print(biases)
 print(biases.shape)
+
+model.compile(loss="sparse_categorical_crossentropy", optimizer="sgd", metrics=["accuracy"])
+history = model.fit(X_train, y_train, epochs=5, validation_data=(X_valid, y_valid))
+print(history)
+print(history.params)
+print(history.epoch)
+print(history.history)
+
+pd.DataFrame(history.history).plot(figsize=(8, 5))
+plt.grid(True)
+plt.gca().set_ylim(0, 1)  # set the vertical range to [0 - 1]
+plt.show()
+
+print(model.evaluate(X_test, y_test))
+
+X_new = X_test[:3]
+y_proba = model.predict(X_new)
+print(y_proba.round(2))
+
+y_pred = model.predict_classes(X_new)
+print(y_pred)
+print(np.array(class_names)[y_pred])
+y_new = y_test[:3]
+print(y_new)
