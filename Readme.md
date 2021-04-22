@@ -23,3 +23,7 @@ Primary display adapter: #29
 
 go to software and updates,
 go to additional drivers tab
+
+sudo apt install gpustat
+---> run
+gpustat
